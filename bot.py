@@ -175,6 +175,7 @@ async def waifu(ctx):
             else:
                 claim = add_waifu(waifu.id, str(ctx.guild.id), str(user.id))
                 if claim['claim']:
+                    timeout = True
                     await ctx.send(f"{user.mention}, Vous avez claim {waifu.name} !")
                 else:
                     await ctx.send(f"{user.mention}, Vous avez déjà claim cette heure !")
