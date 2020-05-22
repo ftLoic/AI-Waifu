@@ -74,7 +74,11 @@ async def img(ctx, *, name):
     else:
         embed = discord.Embed(title=f"{waifu.name}", description=f"Generated waifu N°{waifu.id}", colour=discord.Colour(0x844BC2))
         embed.set_image(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu.id}.jpg")
-        embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
+        if waifu.owned:
+            m = ctx.guild.get_member(waifu.owner)
+            embed.set_footer(icon_url=m.avatar_url, text=f"Appartient à {m.display_name}\nPowered by: thiswaifudoesnotexist.net")
+        else:
+            embed.set_footer(text=f"Powered by: thiswaifudoesnotexist.net")
         await ctx.send(embed=embed)
 
 # ==================================== ROLLS ====================================
