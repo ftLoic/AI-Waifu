@@ -279,7 +279,7 @@ if os.path.exists("access.json"):
                 bot.run(access['token'])
                 print("Launching bot...")
             except:
-                print("Wrong token in access?hsin")
+                print("Wrong token in access.json")
         else:
             print("Token in access.json is empty")
 else:
