@@ -262,6 +262,15 @@ async def divorce(ctx, *, name=''):
                     await ctx.send("Hein ? 🤔 Tu l'as déjà abandonnée sur le bord de la route, en fait ?")
         else:
             await ctx.send("Hein ? 🤔 Tu es déjà célibataire et libre comme l'air !")
+
+# ==================================== PING ====================================
+@commands.check(chan)
+@bot.command()
+async def ping(ctx):
+    await ctx.send(f"Pong! <:kanna_open:685809301201092652> {round(client.latency*1000)}ms")
+
+# ================================================================================
+# ==================================== SYSTEM ====================================
 async def save_db():
     await bot.wait_until_ready()
     while True:
