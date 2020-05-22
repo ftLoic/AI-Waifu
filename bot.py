@@ -267,7 +267,7 @@ async def divorce(ctx, *, name=''):
 @commands.check(chan)
 @bot.command()
 async def ping(ctx):
-    await ctx.send(f"Pong! <:kanna_open:685809301201092652> {round(client.latency*1000)}ms")
+    await ctx.send(f"Pong! <:kanna_open:685809301201092652> {round(bot.latency*1000)}ms")
 
 # ================================================================================
 # ==================================== SYSTEM ====================================
