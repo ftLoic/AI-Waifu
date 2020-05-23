@@ -72,7 +72,7 @@ async def img(ctx, *, name):
     except:
         await ctx.send("Cette waifu n'existe pas... Ou est tombée dans les profondeurs des abysses 🤔")
     else:
-        embed = discord.Embed(title=f"{waifu.name}", description=f"Generated waifu N°{waifu.id}", colour=discord.Colour(0x844BC2))
+        embed = discord.Embed(title=f"{waifu.name}", description=f"Waifu générée N°{waifu.id}", colour=discord.Colour(0x844BC2))
         embed.set_image(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu.id}.jpg")
         if waifu.owned:
             m = ctx.guild.get_member(waifu.owner)
@@ -160,7 +160,7 @@ async def waifu(ctx):
         waifu = Waifu(random.randint(0, 100000), guild=guild, bdd=bdd)
         while waifu.owned == True:
             waifu = Waifu(random.randint(0, 100000), guild=guild, bdd=bdd)
-        embed = discord.Embed(title=f"{waifu.name}", description=f"Generated waifu N°{waifu.id}", colour=discord.Colour(0x33DF33))
+        embed = discord.Embed(title=f"{waifu.name}", description=f"Waifu générée N°{waifu.id}", colour=discord.Colour(0x33DF33))
         embed.set_image(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu.id}.jpg")
         embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
         msg = await ctx.send(embed=embed)
@@ -181,6 +181,11 @@ async def waifu(ctx):
                 if claim['claim']:
                     timeout = True
                     await ctx.send(f"{user.mention}, Vous avez claim {waifu.name} !")
+
+                    embed = discord.Embed(title=f"{waifu.name}", description=f"Waifu générée N°{waifu.id}", colour=discord.Colour(0xDF3333))
+                    embed.set_image(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu.id}.jpg")
+                    embed.set_footer(icon_url=user.avatar_url, text=f"Appartient à {user.display_name}\nPowered by: thiswaifudoesnotexist.net")
+                    await msg.edit(embed=embed)
                 else:
                     await ctx.send(f"{user.mention}, Vous avez déjà claim cette heure !")
     else:
