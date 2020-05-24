@@ -356,13 +356,13 @@ async def save_db():
         f.close()
         await asyncio.sleep(5)
 
-if os.path.exists("access.json"):
+if os.path.exists("db/access.json"):
     try:
-        f = open("access.json", "r")
+        f = open("db/access.json", "r")
         access = json.loads(f.read())
         f.close()
     except:
-        print("Error reading access.json")
+        print("Error reading db/access.json")
     else:
         if access['token'] != "":
             bot.loop.create_task(save_db())
@@ -370,8 +370,8 @@ if os.path.exists("access.json"):
                 bot.run(access['token'])
                 print("Launching bot...")
             except:
-                print("Wrong token in access.json")
+                print("Wrong token in db/access.json")
         else:
-            print("Token in access.json is empty")
+            print("Token in db/access.json is empty")
 else:
-    print("File access.json is missing")
+    print("File db/access.json is missing")
