@@ -314,6 +314,7 @@ async def ping(ctx):
 async def invite(ctx):
     await ctx.send(f"Tu peux m'inviter sur ton serveur avec ce lien : \nhttps://discordapp.com/oauth2/authorize?client_id=712770357844508822&scope=bot&permissions=322624")
 @commands.check(chan)
+@commands.is_owner()
 @bot.command(aliases=['lang','langage','lg'])
 async def language(ctx, new_lang: str):
     new_lang = new_lang.lower().strip()
