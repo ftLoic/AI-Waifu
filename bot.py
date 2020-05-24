@@ -36,7 +36,7 @@ for trf in glob("translation/*.json"):
     translations[name] = json.loads(f.read())
     f.close()
 
-bot = commands.Bot(command_prefix=[',','$'])
+bot = commands.Bot(command_prefix=[','])
 
 async def chan(ctx):
     if ctx.channel.topic:
@@ -80,6 +80,71 @@ def add_waifu(wid: int, guild: str, user: str): # Remplacer par waifu.claim()
         bdd[guild]['users'][user]['waifus'].append(wid)
         bdd[guild]['users'][user]['last_claim'] = get_roll_time()
     return claim
+async def show_list(ctx, title, waifu_list):
+    my_harem = []
+    i = 0
+    pos = ""
+    for wid in waifu_list:
+        page = i//10
+        waifu = Waifu(wid, guild=str(ctx.guild.id), bdd=bdd)
+        if i == 0:
+            first = wid
+        if title == "Top Waifu":
+            if i == 0:
+                best = waifu_list[wid]+1
+            pos = f"#{best-waifu_list[wid]} - "
+        if len(my_harem) == page:
+            my_harem.append(f"➡️ {pos}**{waifu.name} (N°{waifu.id})**\n")
+        else:
+            my_harem[page] += f"{pos}{waifu.name} (N°{waifu.id})\n".format(i, pos)
+        i += 1
+    page = 0
+    embed = discord.Embed(title=title, description=f"Page {page+1}/{len(my_harem)}\n\n{my_harem[0]}", colour=discord.Colour(0x844BC2))
+    if i > 0:
+        embed.set_thumbnail(url=f"https://www.thiswaifudoesnotexist.net/example-{first}.jpg")
+    embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
+    msg = await ctx.send(embed=embed)
+
+    pages = ["👈","👉"]
+    emotes = ["⬆️","⬇️"]
+    for p in pages:
+        await msg.add_reaction(p)
+        if p == "👈":
+            for e in emotes:
+                await msg.add_reaction(e)
+    timeout = False
+    n = 0
+    while timeout == False:
+        def check(reaction, user):
+            return reaction.message.id == msg.id and user != bot.user and (reaction.emoji in emotes or reaction.emoji in pages)
+        try:
+            reaction, reacter = await bot.wait_for('reaction_add', timeout=120.0, check=check)
+        except asyncio.TimeoutError:
+            timeout = True
+            await msg.clear_reactions()
+        else:
+            if reaction.emoji in pages: # Page
+                if reaction.emoji == pages[0]:
+                    np = page - 1
+                else:
+                    np = page + 1
+                page = np % len(my_harem)
+                n = 0
+            else: # Haut/bas
+                if reaction.emoji == emotes[0]:
+                    n -= 1
+                else:
+                    n += 1
+            h = my_harem[page].replace("➡️ ", "").replace("**", "").split("\n")
+            n = n % (len(h)-1)
+            h[n] = "➡️ **"+h[n]+"**"
+            waifu_n = h[n].split("°")[1][:-3]
+            h = "\n".join(h)
+
+            embed = discord.Embed(title=title, description=f"Page {page+1}/{len(my_harem)}\n\n{h}", colour=discord.Colour(0x844BC2))
+            embed.set_thumbnail(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu_n}.jpg")
+            embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
+            await msg.edit(embed=embed)
 
 # ==================================== IMAGE ====================================
 @commands.check(chan)
@@ -124,64 +189,21 @@ async def harem(ctx, m: discord.Member = None):
     if m == None:
         m = ctx.author
     guild, user = check_setup(ctx.guild.id, m.id)
-    
-    my_harem = []
-    i = 0
-    for wid in bdd[guild]['users'][user]['waifus']:
-        page = i//10
-        waifu = Waifu(wid, guild=guild, bdd=bdd)
-        if len(my_harem) == page:
-            my_harem.append(f"➡️ **{waifu.name} (N°{waifu.id})**\n")
-        else:
-            my_harem[page] += f"{waifu.name} (N°{waifu.id})\n"
-        i += 1
-    page = 0
-    embed = discord.Embed(title=f"Harem de {m.display_name}", description=f"Page {page+1}/{len(my_harem)}\n\n{my_harem[0]}", colour=discord.Colour(0x844BC2))
-    if i > 0:
-        embed.set_thumbnail(url=f"https://www.thiswaifudoesnotexist.net/example-{bdd[guild]['users'][user]['waifus'][0]}.jpg")
-    embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
-    msg = await ctx.send(embed=embed)
+    await show_list(ctx, f"Harem de {m.display_name}", bdd[guild]['users'][user]['waifus'])
 
-    pages = ["👈","👉"]
-    emotes = ["⬆️","⬇️"]
-    for p in pages:
-        await msg.add_reaction(p)
-        if p == "👈":
-            for e in emotes:
-                await msg.add_reaction(e)
-    timeout = False
-    n = 0
-    while timeout == False:
-        def check(reaction, user):
-            return reaction.message.id == msg.id and user != bot.user and (reaction.emoji in emotes or reaction.emoji in pages)
-        try:
-            reaction, reacter = await bot.wait_for('reaction_add', timeout=120.0, check=check)
-        except asyncio.TimeoutError:
-            timeout = True
-            await msg.clear_reactions()
-        else:
-            if reaction.emoji in pages: # Page
-                if reaction.emoji == pages[0]:
-                    np = page - 1
-                else:
-                    np = page + 1
-                page = np % len(my_harem)
-                n = 0
-            else: # Haut/bas
-                if reaction.emoji == emotes[0]:
-                    n -= 1
-                else:
-                    n += 1
-            h = my_harem[page].replace("➡️ ", "").replace("**", "").split("\n")
-            n = n % (len(h)-1)
-            h[n] = "➡️ **"+h[n]+"**"
-            waifu_n = h[n].split("°")[1][:-3]
-            h = "\n".join(h)
-
-            embed = discord.Embed(title=f"Harem de {m.display_name}", description=f"Page {page+1}/{len(my_harem)}\n\n{h}", colour=discord.Colour(0x844BC2))
-            embed.set_thumbnail(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu_n}.jpg")
-            embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
-            await msg.edit(embed=embed)
+# ==================================== TOP ====================================
+@commands.check(chan)
+@bot.command(aliases=['best'])
+async def top(ctx):
+    guild, user = check_setup(ctx.guild.id, ctx.author.id)
+    _top = {}
+    for guild in bdd:
+        for waifu in bdd[guild]['waifus']:
+            if waifu not in _top:
+                _top[waifu] = 0
+            _top[waifu] += 1
+    _top = {k: v for k, v in sorted(_top.items(), key=lambda item: item[1], reverse=True)}
+    await show_list(ctx, "Top Waifu", _top)
 
 # ==================================== ROLL ====================================
 @commands.check(chan)
