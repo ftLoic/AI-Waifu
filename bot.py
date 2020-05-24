@@ -14,6 +14,7 @@ import random
 import time
 import datetime
 import os
+from glob import glob
 
 try:
     os.chdir('/root/bot_discord/ia/') # Replace with the bot directory
@@ -28,6 +29,12 @@ else:
     f = open("db/data.json", "r")
     bdd = json.loads(f.read())
     f.close()
+translations = {}
+for trf in glob("translation/*.json"):
+    f = open(trf, "r", encoding="utf-8")
+    name = trf.split(".json")[0][-5:]
+    translations[name] = json.loads(f.read())
+    f.close()
 
 bot = commands.Bot(command_prefix=[',','$'])
 
@@ -35,11 +42,22 @@ async def chan(ctx):
     if ctx.channel.topic:
         return ctx.channel.topic.lower().find('ia waifu') >= 0
     return False
-def check_setup(guild, user):
+def tr(message, guild):
+    guild = check_setup_guild(guild)
+    if "lang" not in bdd[guild]:
+        bdd[guild]['lang'] = "en-us"
+    lang = bdd[guild]['lang']
+    if lang not in translations:
+        bdd[guild]['lang'] = lang = "en-us"
+    return translations[lang][message]
+def check_setup_guild(guild):
     guild = str(guild)
-    user = str(user)
     if guild not in bdd:
-        bdd[guild] = {'waifus':[],'users':{}}
+        bdd[guild] = {'waifus':[],'users':{},'lang':'en-us'}
+    return guild
+def check_setup(guild, user):
+    guild = check_setup_guild(guild)
+    user  = str(user)
     if user not in bdd[guild]['users']:
         bdd[guild]['users'][user] = {'waifus':[],'rolls':10,'last_roll':0,'last_claim':0}
     return guild, user
@@ -70,7 +88,7 @@ async def img(ctx, *, name):
     try:
         waifu = Waifu(name, guild=ctx.guild.id, bdd=bdd)
     except:
-        await ctx.send("Cette waifu n'existe pas... Ou est tombée dans les profondeurs des abysses 🤔")
+        await ctx.send(tr("waifu_404", ctx.guild.id))
     else:
         embed = discord.Embed(title=f"{waifu.name}", description=f"Waifu générée N°{waifu.id}", colour=discord.Colour(0x844BC2))
         embed.set_image(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu.id}.jpg")
@@ -91,13 +109,13 @@ async def rolls(ctx, m: discord.Member = None):
 
     if bdd[guild]['users'][user]['last_roll'] < get_roll_time():
         bdd[guild]['users'][user]['rolls'] = 10
-    message = f"vous avez encore {bdd[guild]['users'][user]['rolls']} roll(s).\n"
+    msg = f"vous avez encore {bdd[guild]['users'][user]['rolls']} roll(s).\n"
     claim = can_claim(guild, user)
     if claim['claim']:
-        message += "Vous pouvez encore claim cette heure."
+        msg += "Vous pouvez encore claim cette heure."
     else:
-        message += "Vous ne pouvez plus claim cette heure."
-    await ctx.send(f"{m.mention}, {message}")
+        msg += "Vous ne pouvez plus claim cette heure."
+    await ctx.send(f"{m.mention}, {msg}")
 
 # ==================================== HAREM ====================================
 @commands.check(chan)
@@ -137,7 +155,7 @@ async def harem(ctx, m: discord.Member = None):
         def check(reaction, user):
             return reaction.message.id == msg.id and user != bot.user and (reaction.emoji in emotes or reaction.emoji in pages)
         try:
-            reaction, reacter = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+            reaction, reacter = await bot.wait_for('reaction_add', timeout=120.0, check=check)
         except asyncio.TimeoutError:
             timeout = True
             await msg.clear_reactions()
@@ -198,16 +216,16 @@ async def waifu(ctx):
                 claim = add_waifu(waifu.id, str(ctx.guild.id), str(user.id))
                 if claim['claim']:
                     timeout = True
-                    await ctx.send(f"{user.mention}, Vous avez claim {waifu.name} !")
+                    await ctx.send(f"{user.mention}, vous avez claim {waifu.name} !")
 
                     embed = discord.Embed(title=f"{waifu.name}", description=f"Waifu générée N°{waifu.id}", colour=discord.Colour(0xDF3333))
                     embed.set_image(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu.id}.jpg")
                     embed.set_footer(icon_url=user.avatar_url, text=f"Appartient à {user.display_name}\nPowered by: thiswaifudoesnotexist.net")
                     await msg.edit(embed=embed)
                 else:
-                    await ctx.send(f"{user.mention}, Vous avez déjà claim cette heure !")
+                    await ctx.send(f"{user.mention}, vous avez déjà claim cette heure !")
     else:
-        await ctx.send(f"{ctx.author.mention}, Vous avez déjà roll 10 fois ! Veuillez attendre {roll['wait']} minute(s) pour roll à nouveau.")
+        await ctx.send(f"{ctx.author.mention}, vous avez déjà roll 10 fois ! Veuillez attendre {roll['wait']} minute(s) pour roll à nouveau.")
     
 # ==================================== FIRST WAIFU ====================================
 @commands.check(chan)
@@ -217,14 +235,14 @@ async def firstmarry(ctx, name):
     try:
         waifu = Waifu(name, guild=guild, bdd=bdd)
     except:
-        await ctx.send("Cette waifu n'existe pas... Ou est tombée dans les profondeurs des abysses 🤔")
+        await ctx.send(tr("waifu_404", guild))
     else:
         if waifu.owner == ctx.author.id:
             index = bdd[guild]['users'][user]['waifus'].index(waifu.id)
             bdd[guild]['users'][user]['waifus'].insert(0, bdd[guild]['users'][user]['waifus'].pop(index))
             await ctx.send(f"{waifu.name} a été déplacée en haut de votre liste !")
         else:
-            await ctx.send("Cette waifu ne t'appartient pas... 🤔")
+            await ctx.send(tr("waifu_notowned", guild))
         
 # ==================================== GIVE ====================================
 @commands.check(chan)
@@ -237,7 +255,7 @@ async def give(ctx, m: discord.Member=None, *, name=''):
         try:
             waifu = Waifu(name, guild=guild, bdd=bdd)
         except:
-            await ctx.send("Cette waifu n'existe pas... Ou est tombée dans les profondeurs des abysses 🤔")
+            await ctx.send(tr("waifu_404", guild))
         else:
             msg = await ctx.send(f"{ctx.author.mention}, vous voulez donner {waifu.name} à {m.mention}, hmm ? Réagissez dans les 20 secondes avec ✅ pour valider.")
             await msg.add_reaction("✅")
@@ -253,7 +271,7 @@ async def give(ctx, m: discord.Member=None, *, name=''):
                     bdd[guild]['users'][str(m.id)]['waifus'].append(waifu.id)
                     await ctx.send("Hop-là ! \\o/")
                 else:
-                    await ctx.send("Hé... Tu tenterais pas de dupliquer ta waifu par hasard ? 🤔 Je peux te la retirer définitivement si tu veux jouer !")
+                    await ctx.send("Ben... Elle s'est volatilisée ? 🤔")
     else:
         await ctx.send("Syntaxe :\n,give @Utilisateur Waifu")
 
@@ -265,7 +283,7 @@ async def divorce(ctx, *, name=''):
     try:
         waifu = Waifu(name, guild=guild, bdd=bdd)
     except:
-        await ctx.send("Cette waifu n'existe pas... Ou est tombée dans les profondeurs des abysses 🤔")
+        await ctx.send(tr("waifu_404", guild))
     else:
         if waifu.owner == ctx.author.id:
             msg = await ctx.send(f"{ctx.author.mention}, vous voulez vraiment abandonner {waifu.name} sur le bord de la route ? Réagissez dans les 20 secondes avec ✅ pour valider.")
@@ -284,20 +302,33 @@ async def divorce(ctx, *, name=''):
                 else:
                     await ctx.send("Hein ? 🤔 Tu l'as déjà abandonnée sur le bord de la route, en fait ?")
         else:
-            await ctx.send("Hein ? 🤔 Tu es déjà célibataire et libre comme l'air !")
+            await ctx.send(tr("waifu_notowned", guild))
 
-# ==================================== PING ====================================
+# ==================================== OTHER ====================================
 @commands.check(chan)
 @bot.command()
 async def ping(ctx):
     await ctx.send(f"Pong! <:kanna_open:685809301201092652> {round(bot.latency*1000)}ms")
+@commands.check(chan)
+@bot.command()
+async def invite(ctx):
+    await ctx.send(f"Tu peux m'inviter sur ton serveur avec ce lien : \nhttps://discordapp.com/oauth2/authorize?client_id=712770357844508822&scope=bot&permissions=322624")
+@commands.check(chan)
+@bot.command(aliases=['lang','langage','lg'])
+async def language(ctx, new_lang: str):
+    new_lang = new_lang.lower().strip()
+    if new_lang in translations:
+        bdd[str(ctx.guild.id)]['lang'] = new_lang
+        await ctx.send(tr("language_new", ctx.guild.id))
+    else:
+        await ctx.send(tr("language_404", ctx.guild.id))
 
 # ================================================================================
 # ==================================== SYSTEM ====================================
 async def save_db():
     await bot.wait_until_ready()
     while True:
-        f = open('db/data.json', 'w', encoding='utf-8')
+        f = open("db/data.json", "w", encoding="utf-8")
         f.write(json.dumps(bdd, indent=4, separators=(',', ': ')))
         f.close()
         await asyncio.sleep(5)
