@@ -42,6 +42,8 @@ async def chan(ctx):
     if ctx.channel.topic:
         return ctx.channel.topic.lower().find('ia waifu') >= 0
     return False
+async def is_admin(ctx):
+    return ctx.author.guild_permissions.administrator
 def tr(message, guild):
     guild = check_setup_guild(guild)
     if "lang" not in bdd[guild]:
@@ -335,8 +337,25 @@ async def ping(ctx):
 @bot.command()
 async def invite(ctx):
     await ctx.send(f"Tu peux m'inviter sur ton serveur avec ce lien : \nhttps://discordapp.com/oauth2/authorize?client_id=712770357844508822&scope=bot&permissions=322624")
+bot.remove_command("help")
 @commands.check(chan)
-@commands.is_owner()
+@bot.command()
+async def help(ctx):
+    embed = discord.Embed(title="Aide d'AI Waifu", colour=discord.Colour(0x844BC2))
+    embed.add_field(name="`,w`", value="Génère une waifu que tu peux claim en cliquant sur le ❤️ en réaction ! Attention, tu ne peux claim qu'une waifu par heure.", inline=False)
+    embed.add_field(name="`,r`", value="Consulte ton nombre de rolls restants pour l'heure actuelle.", inline=False)
+    embed.add_field(name="`,divorce`", value="Pour une grosse peine de cœur avec ta bien aimée... 😢", inline=False)
+    embed.add_field(name="`,give`", value="Parce que l'amour peut rimer avec partage. Enfin, pas dans cette phrase là.", inline=False)
+    embed.add_field(name="`,im <waifu>`", value="Envie de regarder de plus près une waifu en particulier ?", inline=False)
+    embed.add_field(name="`,harem [<user>]`", value="Montre à tout le monde ton super harem de waifu !", inline=False)
+    embed.add_field(name="`,fw <waifu>`", value="Place LA waifu de tes rêves en haut de ton harem.", inline=False)
+    embed.add_field(name="`,top`", value="Observe bien les waifu les plus convoitées... 👀", inline=False)
+    embed.add_field(name="`,invite`", value="Invite-moi sur ton serveur !", inline=False)
+    embed.add_field(name="`,lang <lang>`", value="Laisse-moi te montrer les skills de traduction d'une IA ! (ADMIN)", inline=False)
+    embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
+    await ctx.send(embed=embed)
+@commands.check(chan)
+@commands.check(is_admin)
 @bot.command(aliases=['lang','langage','lg'])
 async def language(ctx, new_lang: str):
     new_lang = new_lang.lower().strip()
