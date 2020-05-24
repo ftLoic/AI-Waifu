@@ -1,3 +1,5 @@
 .vscode
 db
+testcommand.py
 access.json
+__pycache__

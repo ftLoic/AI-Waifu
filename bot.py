@@ -107,43 +107,61 @@ async def harem(ctx, m: discord.Member = None):
         m = ctx.author
     guild, user = check_setup(ctx.guild.id, m.id)
     
-    my_harem = ""
+    my_harem = []
+    i = 0
     for wid in bdd[guild]['users'][user]['waifus']:
+        page = i//10
         waifu = Waifu(wid, guild=guild, bdd=bdd)
-        if my_harem == "":
-            my_harem += f"➡️ **{waifu.name} (N°{waifu.id})**\n"
+        if len(my_harem) == page:
+            my_harem.append(f"➡️ **{waifu.name} (N°{waifu.id})**\n")
         else:
-            my_harem += f"{waifu.name} (N°{waifu.id})\n"
-    embed = discord.Embed(title=f"Harem de {m.display_name}", description=my_harem, colour=discord.Colour(0x844BC2))
-    if my_harem != "":
+            my_harem[page] += f"{waifu.name} (N°{waifu.id})\n"
+        i += 1
+    page = 0
+    embed = discord.Embed(title=f"Harem de {m.display_name}", description=f"Page {page+1}/{len(my_harem)}\n\n{my_harem[0]}", colour=discord.Colour(0x844BC2))
+    if i > 0:
         embed.set_thumbnail(url=f"https://www.thiswaifudoesnotexist.net/example-{bdd[guild]['users'][user]['waifus'][0]}.jpg")
     embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
     msg = await ctx.send(embed=embed)
 
-    emotes = ["👈","👉"]
-    for e in emotes:
-        await msg.add_reaction(e)
+    pages = ["👈","👉"]
+    emotes = ["⬆️","⬇️"]
+    for p in pages:
+        await msg.add_reaction(p)
+        if p == "👈":
+            for e in emotes:
+                await msg.add_reaction(e)
     timeout = False
     n = 0
     while timeout == False:
         def check(reaction, user):
-            return reaction.message.id == msg.id and user != bot.user and reaction.emoji in emotes
+            return reaction.message.id == msg.id and user != bot.user and (reaction.emoji in emotes or reaction.emoji in pages)
         try:
             reaction, reacter = await bot.wait_for('reaction_add', timeout=60.0, check=check)
         except asyncio.TimeoutError:
             timeout = True
             await msg.clear_reactions()
         else:
-            if reaction.emoji == emotes[0]:
-                n -= 1
-            else:
-                n += 1
-            n = n % len(bdd[guild]['users'][user]['waifus'])
-            my_harem = my_harem.replace("➡️ ", "").replace("**", "").split("\n")
-            my_harem[n] = "➡️ **"+my_harem[n]+"**"
-            my_harem = "\n".join(my_harem)
-            embed = discord.Embed(title=f"Harem de {m.display_name}", description=my_harem, colour=discord.Colour(0x844BC2))
-            embed.set_thumbnail(url=f"https://www.thiswaifudoesnotexist.net/example-{bdd[guild]['users'][user]['waifus'][n]}.jpg")
+            if reaction.emoji in pages: # Page
+                if reaction.emoji == pages[0]:
+                    np = page - 1
+                else:
+                    np = page + 1
+                page = np % len(my_harem)
+                n = 0
+            else: # Haut/bas
+                if reaction.emoji == emotes[0]:
+                    n -= 1
+                else:
+                    n += 1
+            h = my_harem[page].replace("➡️ ", "").replace("**", "").split("\n")
+            n = n % (len(h)-1)
+            h[n] = "➡️ **"+h[n]+"**"
+            waifu_n = h[n].split("°")[1][:-3]
+            h = "\n".join(h)
+
+            embed = discord.Embed(title=f"Harem de {m.display_name}", description=f"Page {page+1}/{len(my_harem)}\n\n{h}", colour=discord.Colour(0x844BC2))
+            embed.set_thumbnail(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu_n}.jpg")
             embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
             await msg.edit(embed=embed)
 
