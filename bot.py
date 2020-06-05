@@ -16,11 +16,8 @@ import datetime
 import os
 from glob import glob
 
-try:
-    os.chdir('/root/bot_discord/ia/') # Replace with the bot directory
-except:
-    pass
-
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+# Database
 if not os.path.exists("db"):
     os.mkdir("db")
 if not os.path.exists("db/data.json"):
@@ -29,18 +26,21 @@ else:
     f = open("db/data.json", "r")
     bdd = json.loads(f.read())
     f.close()
+# Translation
 translations = {}
 for trf in glob("translation/*.json"):
     f = open(trf, "r", encoding="utf-8")
     name = trf.split(".json")[0][-5:]
     translations[name] = json.loads(f.read())
     f.close()
+# In procedure check
+in_procedure = {}
 
 bot = commands.Bot(command_prefix=[','])
 
 async def chan(ctx):
     if ctx.channel.topic:
-        return ctx.channel.topic.lower().find('ia waifu') >= 0
+        return ctx.channel.topic.lower().find('ai waifu') >= 0
     return False
 async def is_admin(ctx):
     return ctx.author.guild_permissions.administrator
@@ -63,6 +63,16 @@ def check_setup(guild, user):
     if user not in bdd[guild]['users']:
         bdd[guild]['users'][user] = {'waifus':[],'rolls':10,'last_roll':0,'last_claim':0}
     return guild, user
+def start_procedure(user):
+    user = str(user)
+    if user not in in_procedure:
+        in_procedure[user] = False
+    if in_procedure[user] == True:
+        return False
+    in_procedure[user] = True
+    return True
+def stop_procedure(user):
+    in_procedure[str(user)] = False
 def get_roll_time():
     return round(time.time()//(60*60))
 def can_roll(guild: str, user: str):
@@ -82,10 +92,15 @@ def add_waifu(wid: int, guild: str, user: str): # Remplacer par waifu.claim()
         bdd[guild]['users'][user]['waifus'].append(wid)
         bdd[guild]['users'][user]['last_claim'] = get_roll_time()
     return claim
-async def show_list(ctx, title, waifu_list):
+async def show_list(ctx, title, waifu_list, message=""):
     my_harem = []
     i = 0
     pos = ""
+    if len(waifu_list) == 0:
+        embed = discord.Embed(title=title, description=f"Page 0/0\n\n... Célibataire et libre comme l'air.", colour=discord.Colour(0x844BC2))
+        embed.set_footer(text=tr("footer", ctx.guild.id))
+        msg = await ctx.send(message, embed=embed)
+        return False
     for wid in waifu_list:
         page = i//10
         waifu = Waifu(wid, guild=str(ctx.guild.id), bdd=bdd)
@@ -104,13 +119,14 @@ async def show_list(ctx, title, waifu_list):
     embed = discord.Embed(title=title, description=f"Page {page+1}/{len(my_harem)}\n\n{my_harem[0]}", colour=discord.Colour(0x844BC2))
     if i > 0:
         embed.set_thumbnail(url=f"https://www.thiswaifudoesnotexist.net/example-{first}.jpg")
-    embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
-    msg = await ctx.send(embed=embed)
+    embed.set_footer(text=tr("footer", ctx.guild.id))
+    msg = await ctx.send(message, embed=embed)
 
     pages = ["👈","👉"]
     emotes = ["⬆️","⬇️"]
     for p in pages:
-        await msg.add_reaction(p)
+        if i > 9:
+            await msg.add_reaction(p)
         if p == "👈":
             for e in emotes:
                 await msg.add_reaction(e)
@@ -145,7 +161,7 @@ async def show_list(ctx, title, waifu_list):
 
             embed = discord.Embed(title=title, description=f"Page {page+1}/{len(my_harem)}\n\n{h}", colour=discord.Colour(0x844BC2))
             embed.set_thumbnail(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu_n}.jpg")
-            embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
+            embed.set_footer(text=tr("footer", ctx.guild.id))
             await msg.edit(embed=embed)
 
 # ==================================== IMAGE ====================================
@@ -161,9 +177,9 @@ async def img(ctx, *, name):
         embed.set_image(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu.id}.jpg")
         if waifu.owned:
             m = ctx.guild.get_member(waifu.owner)
-            embed.set_footer(icon_url=m.avatar_url, text=f"Appartient à {m.display_name}\nPowered by: thiswaifudoesnotexist.net")
+            embed.set_footer(icon_url=m.avatar_url, text=f"Appartient à {m.display_name}\n"+tr("footer", ctx.guild.id))
         else:
-            embed.set_footer(text=f"Powered by: thiswaifudoesnotexist.net")
+            embed.set_footer(text=tr("footer", ctx.guild.id))
         await ctx.send(embed=embed)
 
 # ==================================== ROLLS ====================================
@@ -222,7 +238,7 @@ async def waifu(ctx):
             waifu = Waifu(random.randint(0, 100000), guild=guild, bdd=bdd)
         embed = discord.Embed(title=f"{waifu.name}", description=f"Waifu générée N°{waifu.id}", colour=discord.Colour(0x33DF33))
         embed.set_image(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu.id}.jpg")
-        embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
+        embed.set_footer(text=tr("footer", ctx.guild.id))
         msg = await ctx.send(embed=embed)
         hearts = ["❤️", "💓", "💗", "💘", "💝", "💞", "💖"]
         await msg.add_reaction(random.choice(hearts))
@@ -244,7 +260,7 @@ async def waifu(ctx):
 
                     embed = discord.Embed(title=f"{waifu.name}", description=f"Waifu générée N°{waifu.id}", colour=discord.Colour(0xDF3333))
                     embed.set_image(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu.id}.jpg")
-                    embed.set_footer(icon_url=user.avatar_url, text=f"Appartient à {user.display_name}\nPowered by: thiswaifudoesnotexist.net")
+                    embed.set_footer(icon_url=user.avatar_url, text=f"Appartient à {user.display_name}\n"+tr("footer", ctx.guild.id))
                     await msg.edit(embed=embed)
                 else:
                     await ctx.send(f"{user.mention}, vous avez déjà claim cette heure !")
@@ -281,27 +297,73 @@ async def give(ctx, m: discord.Member=None, *, name=''):
         except:
             await ctx.send(tr("waifu_404", guild))
         else:
-            msg = await ctx.send(f"{ctx.author.mention}, vous voulez donner {waifu.name} à {m.mention}, hmm ? Réagissez dans les 20 secondes avec ✅ pour valider.")
-            await msg.add_reaction("✅")
-            def check(reaction, author):
-                return reaction.message.id == msg.id and author.id == ctx.author.id and reaction.emoji == "✅"
-            try:
-                await bot.wait_for('reaction_add', timeout=20.0, check=check)
-            except asyncio.TimeoutError:
-                await msg.clear_reactions()
-            else:
-                if waifu.id in bdd[guild]['users'][user]['waifus']:
+            if start_procedure(user):
+                msg = await ctx.send(f"{ctx.author.mention}, vous voulez donner {waifu.name} à {m.mention}, hmm ? Réagissez dans les 20 secondes avec ✅ pour valider.")
+                await msg.add_reaction("✅")
+                def check(reaction, author):
+                    return reaction.message.id == msg.id and author.id == ctx.author.id and reaction.emoji == "✅"
+                try:
+                    await bot.wait_for('reaction_add', timeout=20.0, check=check)
+                except asyncio.TimeoutError:
+                    await msg.clear_reactions()
+                    stop_procedure(user)
+                else:
                     bdd[guild]['users'][user]['waifus'].remove(waifu.id)
                     bdd[guild]['users'][str(m.id)]['waifus'].append(waifu.id)
                     await ctx.send("Hop-là ! \\o/")
-                else:
-                    await ctx.send("Ben... Elle s'est volatilisée ? 🤔")
+                    stop_procedure(user)
+            else:
+                await ctx.send("Veuillez confirmer ou attendre la fin de tous vos dons/échanges/divorces en cours pour continuer.")
     else:
-        await ctx.send("Syntaxe :\n,give @Utilisateur Waifu")
+        await ctx.send("Syntaxe :\n,give @Utilisateur Ma_Waifu")
+
+# ==================================== ECHANGE ====================================
+@commands.check(chan)
+@bot.command(aliases=['e'])
+async def exchange(ctx, m: discord.Member, *, name=''):
+    guild, user = check_setup(ctx.guild.id, ctx.author.id)
+    check_setup(ctx.guild.id, m.id)
+
+    if m != None and m.id != ctx.author.id:
+        try:
+            waifu = Waifu(name, guild=guild, bdd=bdd)
+        except:
+            await ctx.send(tr("waifu_404", guild))
+        else:
+            if waifu.owner == ctx.author.id:
+                await ctx.send("Fonctionnalité en cours de développement")
+                # # Il faut que les 2 soient prêts
+                # u1 = start_procedure(user)
+                # if u1:
+                #     u2 = start_procedure(m.id)
+                #     if not u2:
+                #         stop_procedure(user) # Finalement, u1 n'a pas lancé de procédure
+                # if u1 and u2:
+                #     await show_list(ctx, f"Harem de {m.display_name}", bdd[guild]['users'][str(m.id)]['waifus'], f"{m.mention}, {ctx.author.display_name} vous propose d'échanger {waifu.name}, de son harem... Qu'avez-vous à proposer ?")
+                #     def check(message):
+                #         return message.content == "✅"
+                #     try:
+                #         await bot.wait_for('message', timeout=20.0, check=check)
+                #     except asyncio.TimeoutError:
+                #         stop_procedure(user)
+                #         stop_procedure(m.id)
+                #     else:
+                #         stop_procedure(user)
+                #         stop_procedure(m.id)
+                # else:
+                #     await ctx.send("Veuillez confirmer ou attendre la fin de tous vos dons/échanges/divorces en cours pour continuer.")
+            else:
+                await ctx.send(tr("waifu_notowned", guild))
+    else:
+        await ctx.send("Syntaxe :\n,exchange @Utilisateur Ma_Waifu")
+@exchange.error
+async def exchange_error(ctx, error):
+    print(error)
+    await ctx.send("Erreur. Syntaxe :\n,exchange @Utilisateur Ma_Waifu")
 
 # ==================================== DIVORCE ====================================
 @commands.check(chan)
-@bot.command(aliases=['kick','del','remove'])
+@bot.command(aliases=['del','rem','remove'])
 async def divorce(ctx, *, name=''):
     guild, user = check_setup(ctx.guild.id, ctx.author.id)
     try:
@@ -310,21 +372,23 @@ async def divorce(ctx, *, name=''):
         await ctx.send(tr("waifu_404", guild))
     else:
         if waifu.owner == ctx.author.id:
-            msg = await ctx.send(f"{ctx.author.mention}, vous voulez vraiment abandonner {waifu.name} sur le bord de la route ? Réagissez dans les 20 secondes avec ✅ pour valider.")
-            await msg.add_reaction("✅")
-            def check(reaction, author):
-                return reaction.message.id == msg.id and author.id == ctx.author.id and reaction.emoji == "✅"
-            try:
-                await bot.wait_for('reaction_add', timeout=20.0, check=check)
-            except asyncio.TimeoutError:
-                await msg.clear_reactions()
-            else:
-                if waifu.id in bdd[guild]['users'][user]['waifus']:
+            if start_procedure(user):
+                msg = await ctx.send(f"{ctx.author.mention}, vous voulez vraiment abandonner {waifu.name} sur le bord de la route ? Réagissez dans les 20 secondes avec ✅ pour valider.")
+                await msg.add_reaction("✅")
+                def check(reaction, author):
+                    return reaction.message.id == msg.id and author.id == ctx.author.id and reaction.emoji == "✅"
+                try:
+                    await bot.wait_for('reaction_add', timeout=20.0, check=check)
+                except asyncio.TimeoutError:
+                    await msg.clear_reactions()
+                    stop_procedure(user)
+                else:
                     bdd[guild]['users'][user]['waifus'].remove(waifu.id)
                     bdd[guild]['waifus'].remove(waifu.id)
                     await ctx.send(random.choice([f"{ctx.author.mention} : Adieu {waifu.name} !", f"{ctx.author.mention} : Célibataire et libre comme l'air !", f"{waifu.name} : *Je ne t'ai jamais aimé de toute façon {ctx.author.mention}...*"]))
-                else:
-                    await ctx.send("Hein ? 🤔 Tu l'as déjà abandonnée sur le bord de la route, en fait ?")
+                    stop_procedure(user)
+            else:
+                await ctx.send("Veuillez confirmer ou attendre la fin de tous vos dons/échanges/divorces en cours pour continuer.")
         else:
             await ctx.send(tr("waifu_notowned", guild))
 
@@ -342,17 +406,11 @@ bot.remove_command("help")
 @bot.command()
 async def help(ctx):
     embed = discord.Embed(title="Aide d'AI Waifu", colour=discord.Colour(0x844BC2))
-    embed.add_field(name="`,w`", value="Génère une waifu que tu peux claim en cliquant sur le ❤️ en réaction ! Attention, tu ne peux claim qu'une waifu par heure.", inline=False)
-    embed.add_field(name="`,r`", value="Consulte ton nombre de rolls restants pour l'heure actuelle.", inline=False)
-    embed.add_field(name="`,divorce`", value="Pour une grosse peine de cœur avec ta bien aimée... 😢", inline=False)
-    embed.add_field(name="`,give`", value="Parce que l'amour peut rimer avec partage. Enfin, pas dans cette phrase là.", inline=False)
-    embed.add_field(name="`,im <waifu>`", value="Envie de regarder de plus près une waifu en particulier ?", inline=False)
-    embed.add_field(name="`,harem [<user>]`", value="Montre à tout le monde ton super harem de waifu !", inline=False)
-    embed.add_field(name="`,fw <waifu>`", value="Place LA waifu de tes rêves en haut de ton harem.", inline=False)
-    embed.add_field(name="`,top`", value="Observe bien les waifu les plus convoitées... 👀", inline=False)
-    embed.add_field(name="`,invite`", value="Invite-moi sur ton serveur !", inline=False)
-    embed.add_field(name="`,lang <lang>`", value="Laisse-moi te montrer les skills de traduction d'une IA ! (ADMIN)", inline=False)
-    embed.set_footer(text="Powered by: thiswaifudoesnotexist.net")
+    commands = ['w', 'r', 'divorce', 'give', 'im <waifu>', 'harem [<user>]', 'fw <waifu>', 'top', 'invite', 'lang <lang>']
+    for c in commands:
+        name = c.split(" ")[0]
+        embed.add_field(name=f"`,{c}`", value=tr(f"help_{name}", ctx.guild.id), inline=False)
+    embed.set_footer(text=tr("footer", ctx.guild.id))
     await ctx.send(embed=embed)
 @commands.check(chan)
 @commands.check(is_admin)

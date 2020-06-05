@@ -1,7 +1,21 @@
 {
+    "footer": "Powered by thiswaifudoesnotexist.net - Source ou traduction : github.com/AI-Waifu",
+    
     "language_new": "Je parlerai maintenant en français ! C'était sûr, en fait.",
     "language_404": "Erreur : Ce code de langue n'existe pas 🤔\nLangues disponibles : FR-FR, EN-US",
 
     "waifu_404": "Cette waifu n'existe pas... À moins qu'elle soit tombée dans les profondeurs des abysses ? 🤔",
-    "waifu_notowned": "Cette waifu ne t'appartient pas... 🤔"
+    "waifu_notowned": "Cette waifu ne t'appartient pas... 🤔",
+    
+    "help": "Aide d'AI Waifu",
+    "help_w": "Roll une waifu que tu peux claim en cliquant sur le ❤️ en réaction ! Attention, tu ne peux claim qu'une waifu par heure.",
+    "help_r": "Consulte ton nombre de rolls restants pour l'heure actuelle.",
+    "help_divorce": "Pour une grosse peine de cœur avec ta bien aimée... 😢",
+    "help_give": "Parce que l'amour peut rimer avec partage. Enfin, pas dans cette phrase là.",
+    "help_im": "Envie de regarder de plus près une waifu en particulier ?",
+    "help_harem": "Montre à tout le monde ton super harem de waifu !",
+    "help_fw": "Place LA waifu de tes rêves en haut de ton harem.",
+    "help_top": "Observe bien les waifu les plus convoitées... 👀",
+    "help_invite": "Invite-moi sur ton serveur !",
+    "help_lang": "Laisse-moi te montrer les skills de traduction d'une IA ! (ADMIN UNIQUEMENT)"
 }
