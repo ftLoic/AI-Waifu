@@ -6,6 +6,7 @@
 
     "waifu_404": "This waifu doesn't exist... Unless she fell into the depths of the abyss? 🤔",
     "waifu_notowned": "This waifu doesn't belong to you... 🤔",
+    "waifu_owned": "Belongs to {}",
 
     "help": "Help of AI Waifu",
     "help_w": "Roll a waifu that you can claim by clicking on the ❤️ reaction! Be careful, you can only claim one waifu per hour.",
@@ -17,5 +18,7 @@
     "help_fw": "Put THE waifu of your dreams at the top of your harem.",
     "help_top": "Keep an eye on the most popular waifu... 👀",
     "help_invite": "Invite me on your server!",
-    "help_lang": "Let me show you the translation skills of an AI! (ADMIN ONLY)"
+    "help_lang": "Let me show you the translation skills of an AI! (ADMIN ONLY)",
+
+    "harem_single": "Very single !"
 }

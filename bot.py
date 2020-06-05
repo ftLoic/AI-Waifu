@@ -177,7 +177,7 @@ async def img(ctx, *, name):
         embed.set_image(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu.id}.jpg")
         if waifu.owned:
             m = ctx.guild.get_member(waifu.owner)
-            embed.set_footer(icon_url=m.avatar_url, text=f"Appartient à {m.display_name}\n"+tr("footer", ctx.guild.id))
+            embed.set_footer(icon_url=m.avatar_url, text=tr("waifu_owned", ctx.guild.id).format(m.display_name)+"\n"+tr("footer", ctx.guild.id))
         else:
             embed.set_footer(text=tr("footer", ctx.guild.id))
         await ctx.send(embed=embed)
