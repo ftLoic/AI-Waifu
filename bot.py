@@ -262,7 +262,7 @@ async def waifu(ctx):
                 claim = add_waifu(waifu.id, str(ctx.guild.id), str(user.id))
                 if claim['claim']:
                     timeout = True
-                    await ctx.send(f"{user.mention}, vous avez claim {waifu.name} !")
+                    await ctx.send(f"{user.mention}, "+tr("waifu_claim", guild).format(waifu.name))
 
                     embed = discord.Embed(title=f"{waifu.name}", description=tr("waifu_number", guild).format(waifu.id), colour=discord.Colour(0xDF3333))
                     embed.set_image(url=f"https://www.thiswaifudoesnotexist.net/example-{waifu.id}.jpg")
