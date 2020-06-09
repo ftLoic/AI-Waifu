@@ -27,7 +27,7 @@
     "help_invite": "Invite-moi sur ton serveur !",
     "help_lang": "Laisse-moi te montrer les skills de traduction d'une IA ! (ADMIN UNIQUEMENT)",
 
-    "r_yes": "vous pouvez encore claim cette heure.",
+    "r_yep": "vous pouvez encore claim cette heure.",
     "r_nope": "vous ne pouvez plus claim cette heure.",
     "r_ten": "vous avez déjà roll 10 fois ! Veuillez attendre {} minute(s) pour roll à nouveau.",
     "r_rolls": "vous avez encore {} roll(s).",

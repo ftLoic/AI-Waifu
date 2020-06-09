@@ -380,6 +380,7 @@ async def on_command_error(ctx, error):
     except:
         pass
     else:
+        print(error)
         found = False
         for c in bot_commands:
             if c.split(" ")[0] == cmd:
