@@ -271,7 +271,7 @@ async def waifu(ctx):
                 else:
                     await ctx.send(f"{user.mention}, "+tr("r_nope", guild))
     else:
-        await ctx.send(f"{ctx.author.mention}, "+tr("r_ten").format(roll['wait']))
+        await ctx.send(f"{ctx.author.mention}, "+tr("r_ten", guild).format(roll['wait']))
     
 # ==================================== FIRST WAIFU ====================================
 @commands.check(chan)
