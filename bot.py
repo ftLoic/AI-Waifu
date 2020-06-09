@@ -321,7 +321,9 @@ async def give(ctx, m: discord.Member=None, *, name=''):
             else:
                 await ctx.send(tr("procedure_nope", guild))
     else:
-        await ctx.send("Syntaxe :\n,give @Utilisateur Ma_Waifu")
+        for c in bot_commands:
+            if c.split(" ")[0] == "exchange":
+                await ctx.send(tr("cmd_error", ctx.guild.id)+f"\n`,{c}`\n*"+tr(f"help_exchange", ctx.guild.id)+"*")
 
 # ==================================== ECHANGE ====================================
 @commands.check(chan)
@@ -372,7 +374,9 @@ async def exchange(ctx, m: discord.Member, *, name=''):
             else:
                 await ctx.send(tr("waifu_notowned", guild))
     else:
-        await ctx.send("Syntaxe :\n,exchange @Utilisateur Waifu1/Waifu2")
+        for c in bot_commands:
+            if c.split(" ")[0] == "exchange":
+                await ctx.send(tr("cmd_error", ctx.guild.id)+f"\n`,{c}`\n*"+tr(f"help_exchange", ctx.guild.id)+"*")
 @bot.event
 async def on_command_error(ctx, error):
     try:
