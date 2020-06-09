@@ -379,20 +379,19 @@ async def exchange(ctx, m: discord.Member, *, name=''):
                 await ctx.send(tr("cmd_error", ctx.guild.id)+f"\n`,{c}`\n*"+tr(f"help_exchange", ctx.guild.id)+"*")
 @bot.event
 async def on_command_error(ctx, error):
-    try:
-        cmd = ctx.message.content[1:].split(" ")[0]
-    except:
-        pass
-    else:
-        print(error)
-        found = False
-        for c in bot_commands:
-            if c.split(" ")[0] == cmd:
-                found = True
-                await ctx.send(tr("cmd_error", ctx.guild.id)+f"\n`,{c}`\n*"+tr(f"help_{cmd}", ctx.guild.id)+"*")
-                break
-        if found == False:
-            await ctx.send(tr("cmd_404", ctx.guild.id))
+    print(error)
+    if isinstance(error, commands.BadArgument):
+        try:
+            cmd = ctx.message.content[1:].split(" ")[0]
+        except:
+            pass
+        else:
+            for c in bot_commands:
+                if c.split(" ")[0] == cmd:
+                    await ctx.send(tr("cmd_error", ctx.guild.id)+f"\n`,{c}`\n*"+tr(f"help_{cmd}", ctx.guild.id)+"*")
+                    break
+    elif isinstance(error, commands.CommandNotFound):
+        await ctx.send(tr("cmd_404", ctx.guild.id))
 
 # ==================================== DIVORCE ====================================
 @commands.check(chan)
